@@ -340,6 +340,9 @@ pub fn init_database(app: &AppHandle) -> SqliteResult<Connection> {
         [],
     )?;
 
+    // Initialize recent projects table
+    super::recent_projects::init_recent_projects_table(&conn)?;
+
     Ok(conn)
 }
 

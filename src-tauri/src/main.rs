@@ -41,6 +41,9 @@ use commands::storage::{
     storage_list_tables, storage_read_table, storage_update_row, storage_delete_row,
     storage_insert_row, storage_execute_sql, storage_reset_database,
 };
+use commands::recent_projects::{
+    add_recent_project, get_recent_projects, remove_recent_project, clear_recent_projects,
+};
 use process::ProcessRegistryState;
 use std::sync::Mutex;
 use tauri::Manager;
@@ -174,6 +177,11 @@ fn main() {
             storage_insert_row,
             storage_execute_sql,
             storage_reset_database,
+            // Recent projects
+            add_recent_project,
+            get_recent_projects,
+            remove_recent_project,
+            clear_recent_projects,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

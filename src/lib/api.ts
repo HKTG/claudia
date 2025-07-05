@@ -70,6 +70,16 @@ export interface ClaudeVersionStatus {
 }
 
 /**
+ * Represents a recent project
+ */
+export interface RecentProject {
+  path: string;
+  name: string;
+  last_accessed: string;
+  access_count: number;
+}
+
+/**
  * Represents a CLAUDE.md file found in the project
  */
 export interface ClaudeMdFile {
@@ -1642,6 +1652,61 @@ export const api = {
       return await invoke<void>("storage_reset_database");
     } catch (error) {
       console.error("Failed to reset database:", error);
+      throw error;
+    }
+  },
+
+  /**
+   * Add or update a recent project
+   * @param path - The project path
+   * @returns Promise resolving when the project is added
+   */
+  async addRecentProject(path: string): Promise<void> {
+    try {
+      return await invoke<void>("add_recent_project", { path });
+    } catch (error) {
+      console.error("Failed to add recent project:", error);
+      throw error;
+    }
+  },
+
+  /**
+   * Get recent projects
+   * @param limit - Maximum number of projects to return
+   * @returns Promise resolving to array of recent projects
+   */
+  async getRecentProjects(limit?: number): Promise<RecentProject[]> {
+    try {
+      return await invoke<RecentProject[]>("get_recent_projects", { limit });
+    } catch (error) {
+      console.error("Failed to get recent projects:", error);
+      throw error;
+    }
+  },
+
+  /**
+   * Remove a recent project
+   * @param path - The project path to remove
+   * @returns Promise resolving when the project is removed
+   */
+  async removeRecentProject(path: string): Promise<void> {
+    try {
+      return await invoke<void>("remove_recent_project", { path });
+    } catch (error) {
+      console.error("Failed to remove recent project:", error);
+      throw error;
+    }
+  },
+
+  /**
+   * Clear all recent projects
+   * @returns Promise resolving when all projects are cleared
+   */
+  async clearRecentProjects(): Promise<void> {
+    try {
+      return await invoke<void>("clear_recent_projects");
+    } catch (error) {
+      console.error("Failed to clear recent projects:", error);
       throw error;
     }
   },

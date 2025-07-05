@@ -30,6 +30,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { SplitPane } from "@/components/ui/split-pane";
 import { WebviewPreview } from "./WebviewPreview";
+import { RecentProjectsList } from "./RecentProjectsList";
 import type { ClaudeStreamMessage } from "./AgentExecution";
 import { useVirtualizer } from "@tanstack/react-virtual";
 
@@ -589,10 +590,26 @@ export const ClaudeCodeSession: React.FC<ClaudeCodeSessionProps> = ({
         if (effectiveSession && !isFirstPrompt) {
           console.log('[ClaudeCodeSession] Resuming session:', effectiveSession.id);
           await api.resumeClaudeCode(projectPath, effectiveSession.id, prompt, model);
+          
+          // Save project to recent projects
+          try {
+            await api.addRecentProject(projectPath);
+          } catch (error) {
+            console.error("Failed to save recent project:", error);
+            // Don't fail the whole operation if this fails
+          }
         } else {
           console.log('[ClaudeCodeSession] Starting new session');
           setIsFirstPrompt(false);
           await api.executeClaudeCode(projectPath, prompt, model);
+          
+          // Save project to recent projects
+          try {
+            await api.addRecentProject(projectPath);
+          } catch (error) {
+            console.error("Failed to save recent project:", error);
+            // Don't fail the whole operation if this fails
+          }
         }
       }
     } catch (err) {
@@ -901,29 +918,38 @@ export const ClaudeCodeSession: React.FC<ClaudeCodeSessionProps> = ({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ delay: 0.1 }}
-      className="p-4 border-b border-border flex-shrink-0"
+      className="p-4 border-b border-border flex-shrink-0 space-y-4"
     >
-      <Label htmlFor="project-path" className="text-sm font-medium">
-        Project Directory
-      </Label>
-      <div className="flex items-center gap-2 mt-1">
-        <Input
-          id="project-path"
-          value={projectPath}
-          onChange={(e) => setProjectPath(e.target.value)}
-          placeholder="/path/to/your/project"
-          className="flex-1"
-          disabled={isLoading}
-        />
-        <Button
-          onClick={handleSelectPath}
-          size="icon"
-          variant="outline"
-          disabled={isLoading}
-        >
-          <FolderOpen className="h-4 w-4" />
-        </Button>
+      <div>
+        <Label htmlFor="project-path" className="text-sm font-medium">
+          Project Directory
+        </Label>
+        <div className="flex items-center gap-2 mt-1">
+          <Input
+            id="project-path"
+            value={projectPath}
+            onChange={(e) => setProjectPath(e.target.value)}
+            placeholder="/path/to/your/project"
+            className="flex-1"
+            disabled={isLoading}
+          />
+          <Button
+            onClick={handleSelectPath}
+            size="icon"
+            variant="outline"
+            disabled={isLoading}
+          >
+            <FolderOpen className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
+      
+      <RecentProjectsList 
+        onSelect={(path) => {
+          setProjectPath(path);
+          setError(null);
+        }}
+      />
     </motion.div>
   );
 
