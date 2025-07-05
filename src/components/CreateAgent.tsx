@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import MDEditor from "@uiw/react-md-editor";
 import { type AgentIconName } from "./CCAgents";
 import { IconPicker, ICON_MAP } from "./IconPicker";
+import { useTheme } from "@/lib/themeContext";
 
 interface CreateAgentProps {
   /**
@@ -51,7 +52,8 @@ export const CreateAgent: React.FC<CreateAgentProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
   const [showIconPicker, setShowIconPicker] = useState(false);
-
+  
+  const { theme } = useTheme();
   const isEditMode = !!agent;
 
   const handleSave = async () => {
@@ -300,7 +302,7 @@ export const CreateAgent: React.FC<CreateAgentProps> = ({
                 <p className="text-xs text-muted-foreground mb-2">
                   Define the behavior and capabilities of your CC Agent
                 </p>
-                <div className="rounded-lg border border-border overflow-hidden shadow-sm" data-color-mode="dark">
+                <div className="rounded-lg border border-border overflow-hidden shadow-sm" data-color-mode={theme}>
                   <MDEditor
                     value={systemPrompt}
                     onChange={(val) => setSystemPrompt(val || "")}

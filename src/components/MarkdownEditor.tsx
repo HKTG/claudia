@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Toast, ToastContainer } from "@/components/ui/toast";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { useTheme } from "@/lib/themeContext";
 
 interface MarkdownEditorProps {
   /**
@@ -35,6 +36,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
   
+  const { theme } = useTheme();
   const hasChanges = content !== originalContent;
   
   // Load the system prompt on mount
@@ -143,7 +145,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
           ) : (
-            <div className="h-full rounded-lg border border-border overflow-hidden shadow-sm" data-color-mode="dark">
+            <div className="h-full rounded-lg border border-border overflow-hidden shadow-sm" data-color-mode={theme}>
               <MDEditor
                 value={content}
                 onChange={(val) => setContent(val || "")}

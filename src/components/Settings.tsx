@@ -11,7 +11,8 @@ import {
   Settings2,
   Terminal,
   Loader2,
-  Database
+  Database,
+  Palette
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,6 +29,7 @@ import { cn } from "@/lib/utils";
 import { Toast, ToastContainer } from "@/components/ui/toast";
 import { ClaudeVersionSelector } from "./ClaudeVersionSelector";
 import { StorageTab } from "./StorageTab";
+import { useTheme } from "@/lib/themeContext";
 
 interface SettingsProps {
   /**
@@ -77,6 +79,9 @@ export const Settings: React.FC<SettingsProps> = ({
   const [currentBinaryPath, setCurrentBinaryPath] = useState<string | null>(null);
   const [selectedInstallation, setSelectedInstallation] = useState<ClaudeInstallation | null>(null);
   const [binaryPathChanged, setBinaryPathChanged] = useState(false);
+  
+  // Theme hook
+  const { theme, setTheme } = useTheme();
 
 
   // Load settings on mount
@@ -384,6 +389,25 @@ export const Settings: React.FC<SettingsProps> = ({
                   <h3 className="text-base font-semibold mb-4">General Settings</h3>
                   
                   <div className="space-y-4">
+                    {/* Theme Toggle */}
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5 flex-1">
+                        <Label htmlFor="theme">Appearance</Label>
+                        <p className="text-xs text-muted-foreground">
+                          Choose between light and dark theme
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground">Light</span>
+                        <Switch
+                          id="theme"
+                          checked={theme === 'dark'}
+                          onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
+                        />
+                        <span className="text-xs text-muted-foreground">Dark</span>
+                      </div>
+                    </div>
+                    
                     {/* Include Co-authored By */}
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5 flex-1">

@@ -52,6 +52,8 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { claudeSyntaxTheme } from "@/lib/claudeSyntaxTheme";
+import { claudeLightSyntaxTheme } from "@/lib/claudeLightSyntaxTheme";
+import { useTheme } from "@/lib/themeContext";
 import { Button } from "@/components/ui/button";
 import { createPortal } from "react-dom";
 import * as Diff from 'diff';
@@ -400,6 +402,7 @@ export const ReadWidget: React.FC<{ filePath: string; result?: any }> = ({ fileP
  */
 export const ReadResultWidget: React.FC<{ content: string; filePath?: string }> = ({ content, filePath }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const { theme } = useTheme();
   
   // Extract file extension for syntax highlighting
   const getLanguage = (path?: string) => {
@@ -530,7 +533,7 @@ export const ReadResultWidget: React.FC<{ content: string; filePath?: string }> 
         <div className="relative overflow-x-auto">
           <SyntaxHighlighter
             language={language}
-            style={claudeSyntaxTheme}
+            style={theme === 'light' ? claudeLightSyntaxTheme : claudeSyntaxTheme}
             showLineNumbers
             startingLineNumber={startLineNumber}
             wrapLongLines={false}
@@ -695,6 +698,7 @@ export const BashWidget: React.FC<{
  */
 export const WriteWidget: React.FC<{ filePath: string; content: string; result?: any }> = ({ filePath, content, result: _result }) => {
   const [isMaximized, setIsMaximized] = useState(false);
+  const { theme } = useTheme();
   
   // Extract file extension for syntax highlighting
   const getLanguage = (path: string) => {
@@ -776,7 +780,7 @@ export const WriteWidget: React.FC<{ filePath: string; content: string; result?:
           <div className="flex-1 overflow-auto">
             <SyntaxHighlighter
               language={language}
-              style={claudeSyntaxTheme}
+              style={theme === 'light' ? claudeLightSyntaxTheme : claudeSyntaxTheme}
               customStyle={{
                 margin: 0,
                 padding: '1.5rem',
@@ -827,7 +831,7 @@ export const WriteWidget: React.FC<{ filePath: string; content: string; result?:
       <div className="overflow-auto flex-1">
         <SyntaxHighlighter
           language={language}
-          style={claudeSyntaxTheme}
+          style={theme === 'light' ? claudeLightSyntaxTheme : claudeSyntaxTheme}
           customStyle={{
             margin: 0,
             padding: '1rem',
