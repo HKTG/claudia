@@ -39,6 +39,7 @@ function App() {
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" | "info" } | null>(null);
   const [activeClaudeSessionId, setActiveClaudeSessionId] = useState<string | null>(null);
   const [isClaudeStreaming, setIsClaudeStreaming] = useState(false);
+  const [initialProjectPath, setInitialProjectPath] = useState<string>("");
 
   // Load projects on mount when in projects view
   useEffect(() => {
@@ -61,12 +62,24 @@ function App() {
     const handleClaudeNotFound = () => {
       setShowClaudeBinaryDialog(true);
     };
+    
+    const handleStartNewSession = (event: CustomEvent) => {
+      const { projectPath } = event.detail;
+      // Clear any existing session
+      setSelectedSession(null);
+      // Set the initial project path
+      setInitialProjectPath(projectPath);
+      // Navigate to claude-code-session view
+      handleViewChange("claude-code-session");
+    };
 
     window.addEventListener('claude-session-selected', handleSessionSelected as EventListener);
     window.addEventListener('claude-not-found', handleClaudeNotFound as EventListener);
+    window.addEventListener('start-new-session', handleStartNewSession as EventListener);
     return () => {
       window.removeEventListener('claude-session-selected', handleSessionSelected as EventListener);
       window.removeEventListener('claude-not-found', handleClaudeNotFound as EventListener);
+      window.removeEventListener('start-new-session', handleStartNewSession as EventListener);
     };
   }, []);
 
@@ -362,8 +375,10 @@ function App() {
         return (
           <ClaudeCodeSession
             session={selectedSession || undefined}
+            initialProjectPath={initialProjectPath}
             onBack={() => {
               setSelectedSession(null);
+              setInitialProjectPath("");
               handleViewChange("projects");
             }}
             onStreamingChange={(isStreaming, sessionId) => {

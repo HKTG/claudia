@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FileText, ArrowLeft, Calendar, Clock, MessageSquare } from "lucide-react";
+import { FileText, ArrowLeft, Calendar, Clock, MessageSquare, Plus } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Pagination } from "@/components/ui/pagination";
@@ -94,19 +94,36 @@ export const SessionList: React.FC<SessionListProps> = ({
         </div>
       </motion.div>
 
-      {/* CLAUDE.md Memories Dropdown */}
-      {onEditClaudeFile && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.1 }}
+      {/* Action buttons row */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.1 }}
+        className="flex items-center gap-2"
+      >
+        <Button
+          onClick={() => {
+            // Emit event to start new session with this project path
+            const event = new CustomEvent('start-new-session', { 
+              detail: { projectPath } 
+            });
+            window.dispatchEvent(event);
+          }}
+          size="sm"
+          className="flex items-center gap-2"
         >
+          <Plus className="h-4 w-4" />
+          New Session
+        </Button>
+        
+        {/* CLAUDE.md Memories Dropdown */}
+        {onEditClaudeFile && (
           <ClaudeMemoriesDropdown
             projectPath={projectPath}
             onEditFile={onEditClaudeFile}
           />
-        </motion.div>
-      )}
+        )}
+      </motion.div>
 
       <AnimatePresence mode="popLayout">
         <div className="space-y-2">
