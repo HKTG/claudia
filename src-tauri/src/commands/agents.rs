@@ -2273,3 +2273,46 @@ pub async fn load_agent_session_history(
         Err(format!("Session file not found: {}", session_id))
     }
 }
+
+/// Get recently used agents based on agent runs
+#[tauri::command]
+pub async fn get_recently_used_agents(
+    db: State<'_, AgentDb>,
+    limit: Option<usize>,
+) -> Result<Vec<Agent>, String> {
+    let conn = db.0.lock().map_err(|e| e.to_string())?;
+    let limit = limit.unwrap_or(3);
+    
+    // Query to get recently used agents based on their most recent run
+    let mut stmt = conn.prepare(
+        "SELECT DISTINCT a.id, a.name, a.icon, a.system_prompt, a.default_task, a.model, 
+                a.enable_file_read, a.enable_file_write, a.enable_network,
+                a.created_at, a.updated_at,
+                MAX(ar.created_at) as last_used
+         FROM agents a
+         INNER JOIN agent_runs ar ON a.id = ar.agent_id
+         GROUP BY a.id
+         ORDER BY last_used DESC
+         LIMIT ?1"
+    ).map_err(|e| e.to_string())?;
+
+    let agents = stmt.query_map(params![limit], |row| {
+        Ok(Agent {
+            id: row.get(0)?,
+            name: row.get(1)?,
+            icon: row.get(2)?,
+            system_prompt: row.get(3)?,
+            default_task: row.get(4)?,
+            model: row.get(5)?,
+            enable_file_read: row.get(6)?,
+            enable_file_write: row.get(7)?,
+            enable_network: row.get(8)?,
+            created_at: row.get(9)?,
+            updated_at: row.get(10)?,
+        })
+    }).map_err(|e| e.to_string())?
+      .collect::<Result<Vec<_>, _>>()
+      .map_err(|e| e.to_string())?;
+
+    Ok(agents)
+}

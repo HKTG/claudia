@@ -126,6 +126,9 @@ export interface Agent {
   system_prompt: string;
   default_task?: string;
   model: string;
+  enable_file_read: boolean;
+  enable_file_write: boolean;
+  enable_network: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -634,6 +637,20 @@ export const api = {
       return await invoke<Agent[]>('list_agents');
     } catch (error) {
       console.error("Failed to list agents:", error);
+      throw error;
+    }
+  },
+
+  /**
+   * Gets recently used agents based on agent runs
+   * @param limit - Optional limit for the number of agents to return (default: 3)
+   * @returns Promise resolving to an array of recently used agents
+   */
+  async getRecentlyUsedAgents(limit?: number): Promise<Agent[]> {
+    try {
+      return await invoke<Agent[]>('get_recently_used_agents', { limit });
+    } catch (error) {
+      console.error("Failed to get recently used agents:", error);
       throw error;
     }
   },

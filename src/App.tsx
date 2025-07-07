@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Loader2, Bot, FolderCode } from "lucide-react";
-import { api, type Project, type Session, type ClaudeMdFile } from "@/lib/api";
+import { Plus, Loader2, Bot, FolderCode, Folder, ChevronRight, Clock } from "lucide-react";
+import { api, type Project, type Session, type ClaudeMdFile, type Agent, type RecentProject } from "@/lib/api";
 import { OutputCacheProvider } from "@/lib/outputCache";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -19,6 +19,7 @@ import { MCPManager } from "@/components/MCPManager";
 import { NFOCredits } from "@/components/NFOCredits";
 import { ClaudeBinaryDialog } from "@/components/ClaudeBinaryDialog";
 import { Toast, ToastContainer } from "@/components/ui/toast";
+import { formatDistanceToNow } from "date-fns";
 
 type View = "welcome" | "projects" | "agents" | "editor" | "settings" | "claude-file-editor" | "claude-code-session" | "usage-dashboard" | "mcp";
 
@@ -40,6 +41,9 @@ function App() {
   const [activeClaudeSessionId, setActiveClaudeSessionId] = useState<string | null>(null);
   const [isClaudeStreaming, setIsClaudeStreaming] = useState(false);
   const [initialProjectPath, setInitialProjectPath] = useState<string>("");
+  const [recentProjects, setRecentProjects] = useState<RecentProject[]>([]);
+  const [recentAgents, setRecentAgents] = useState<Agent[]>([]);
+  const [loadingRecents, setLoadingRecents] = useState(false);
 
   // Load projects on mount when in projects view
   useEffect(() => {
@@ -48,6 +52,8 @@ function App() {
     } else if (view === "welcome") {
       // Reset loading state for welcome view
       setLoading(false);
+      // Load recent items
+      loadRecentItems();
     }
   }, [view]);
 
@@ -97,6 +103,25 @@ function App() {
       setError("Failed to load projects. Please ensure ~/.claude directory exists.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  /**
+   * Loads recent items for the welcome page
+   */
+  const loadRecentItems = async () => {
+    try {
+      setLoadingRecents(true);
+      const [projects, agents] = await Promise.all([
+        api.getRecentProjects(3),
+        api.getRecentlyUsedAgents(3)
+      ]);
+      setRecentProjects(projects);
+      setRecentAgents(agents);
+    } catch (err) {
+      console.error("Failed to load recent items:", err);
+    } finally {
+      setLoadingRecents(false);
     }
   };
 
@@ -181,7 +206,7 @@ function App() {
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
-                className="mb-12 text-center"
+                className="mb-8 text-center"
               >
                 <h1 className="text-4xl font-bold tracking-tight">
                   <span className="rotating-symbol"></span>
@@ -190,22 +215,52 @@ function App() {
               </motion.div>
 
               {/* Navigation Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
                 {/* CC Agents Card */}
                 <motion.div
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.5, delay: 0.1 }}
+                  className="space-y-3"
                 >
                   <Card 
-                    className="h-64 cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-lg border border-border/50 shimmer-hover trailing-border"
+                    className="cursor-pointer transition-all duration-200 hover:scale-[1.02] hover:shadow-lg border border-border/50 shimmer-hover trailing-border"
                     onClick={() => handleViewChange("agents")}
                   >
-                    <div className="h-full flex flex-col items-center justify-center p-8">
-                      <Bot className="h-16 w-16 mb-4 text-primary" />
-                      <h2 className="text-xl font-semibold">CC Agents</h2>
+                    <div className="flex items-center justify-between p-4">
+                      <div className="flex items-center gap-3">
+                        <Bot className="h-10 w-10 text-primary" />
+                        <h2 className="text-lg font-semibold">CC Agents</h2>
+                      </div>
+                      <ChevronRight className="h-5 w-5 text-muted-foreground" />
                     </div>
                   </Card>
+
+                  {/* Recent Agents */}
+                  {!loadingRecents && recentAgents.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3, delay: 0.2 }}
+                      className="pl-2 space-y-2"
+                    >
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide">Recently Used</p>
+                      {recentAgents.map((agent) => (
+                        <motion.div
+                          key={agent.id}
+                          whileHover={{ x: 4 }}
+                          className="flex items-center gap-2 p-2 rounded-md hover:bg-accent cursor-pointer text-sm"
+                          onClick={() => {
+                            setView("agents");
+                            // You could emit an event here to select the agent in CCAgents
+                          }}
+                        >
+                          <Bot className="h-4 w-4 text-muted-foreground" />
+                          <span className="flex-1 truncate">{agent.name}</span>
+                        </motion.div>
+                      ))}
+                    </motion.div>
+                  )}
                 </motion.div>
 
                 {/* CC Projects Card */}
@@ -213,16 +268,53 @@ function App() {
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.5, delay: 0.2 }}
+                  className="space-y-3"
                 >
                   <Card 
-                    className="h-64 cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-lg border border-border/50 shimmer-hover trailing-border"
+                    className="cursor-pointer transition-all duration-200 hover:scale-[1.02] hover:shadow-lg border border-border/50 shimmer-hover trailing-border"
                     onClick={() => handleViewChange("projects")}
                   >
-                    <div className="h-full flex flex-col items-center justify-center p-8">
-                      <FolderCode className="h-16 w-16 mb-4 text-primary" />
-                      <h2 className="text-xl font-semibold">CC Projects</h2>
+                    <div className="flex items-center justify-between p-4">
+                      <div className="flex items-center gap-3">
+                        <FolderCode className="h-10 w-10 text-primary" />
+                        <h2 className="text-lg font-semibold">CC Projects</h2>
+                      </div>
+                      <ChevronRight className="h-5 w-5 text-muted-foreground" />
                     </div>
                   </Card>
+
+                  {/* Recent Projects */}
+                  {!loadingRecents && recentProjects.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3, delay: 0.3 }}
+                      className="pl-2 space-y-2"
+                    >
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide">Recent Projects</p>
+                      {recentProjects.map((project) => (
+                        <motion.div
+                          key={project.path}
+                          whileHover={{ x: 4 }}
+                          className="flex items-center gap-2 p-2 rounded-md hover:bg-accent cursor-pointer"
+                          onClick={() => {
+                            setInitialProjectPath(project.path);
+                            setSelectedSession(null);
+                            handleViewChange("claude-code-session");
+                          }}
+                        >
+                          <Folder className="h-4 w-4 text-muted-foreground" />
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm truncate">{project.name}</div>
+                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                              <Clock className="h-3 w-3" />
+                              <span>{formatDistanceToNow(new Date(project.last_accessed), { addSuffix: true })}</span>
+                            </div>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </motion.div>
+                  )}
                 </motion.div>
 
               </div>
